@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import logger from "../scripts/logger/Projects.js";
+import logger from "../scripts/logger/Project.js";
 
 const ProjectSchema = mongoose.Schema(
   {

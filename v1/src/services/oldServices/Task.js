@@ -1,4 +1,4 @@
-import Task from "../../models/Tasks.js";
+import Task from "../../models/Task.js";
 
 export const list = (data) => {
   return Task.find(data || {}).populate({

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import logger from "../scripts/logger/Sections.js";
+import logger from "../scripts/logger/Section.js";
 
 const SectionSchema = mongoose.Schema(
   {

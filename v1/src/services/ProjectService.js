@@ -1,4 +1,4 @@
-import BaseModel from "../models/Projects.js";
+import BaseModel from "../models/Project.js";
 import BaseService from "./BaseService.js";
 
 class ProjectsService extends BaseService {

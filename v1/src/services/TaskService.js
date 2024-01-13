@@ -1,4 +1,4 @@
-import BaseModel from "../models/Tasks.js";
+import BaseModel from "../models/Task.js";
 import BaseService from "./BaseService.js";
 
 class TaskService extends BaseService {

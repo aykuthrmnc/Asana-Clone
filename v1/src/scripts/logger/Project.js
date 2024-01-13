@@ -9,9 +9,9 @@ const logger = winston.createLogger({
     // - Write all logs with importance level of `error` or less to `error.log`
     // - Write all logs with importance level of `info` or less to `combined.log`
     //
-    new winston.transports.File({ filename: "v1/src/logs/projects/error.log", level: "error" }),
-    new winston.transports.File({ filename: "v1/src/logs/projects/info.log", level: "info" }),
-    new winston.transports.File({ filename: "v1/src/logs/projects/combined.log" }),
+    new winston.transports.File({ filename: "v1/src/logs/project/error.log", level: "error" }),
+    new winston.transports.File({ filename: "v1/src/logs/project/info.log", level: "info" }),
+    new winston.transports.File({ filename: "v1/src/logs/project/combined.log" }),
     // new winston.transports.Console(),
   ],
 });

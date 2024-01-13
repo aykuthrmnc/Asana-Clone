@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import logger from "../scripts/logger/Tasks.js";
+import logger from "../scripts/logger/Task.js";
 
 const TaskSchema = mongoose.Schema(
   {

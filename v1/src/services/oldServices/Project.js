@@ -1,4 +1,4 @@
-import Project from "../../models/Projects.js";
+import Project from "../../models/Project.js";
 
 export const list = (data) => {
   return Project.find(data || {}).populate({

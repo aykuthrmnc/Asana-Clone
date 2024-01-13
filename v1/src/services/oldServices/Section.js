@@ -1,4 +1,4 @@
-import Section from "../../models/Sections.js";
+import Section from "../../models/Section.js";
 
 export const list = (data) => {
   return Section.find(data || {}).populate({
