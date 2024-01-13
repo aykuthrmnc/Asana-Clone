@@ -1,6 +1,6 @@
 import { Router } from "express";
 import TaskController from "../controllers/Task.js";
-import { createValidation, updateValidation, commentValidation } from "../validations/Tasks.js";
+import { getValidation, createValidation, updateValidation, commentValidation } from "../validations/Task.js";
 import { authenticate, validate } from "../middlewares/index.js";
 
 const router = Router();
@@ -12,7 +12,7 @@ router.patch("/:id", authenticate, validate(updateValidation), TaskController.up
 router.delete("/:id", authenticate, TaskController.deleteTask);
 
 // SUBTASK
-router.get("/:id", authenticate, TaskController.getTask);
+router.get("/:id", authenticate, validate(getValidation), TaskController.getTask);
 router.post("/:id/add-sub-task", authenticate, validate(createValidation), TaskController.addSubTask);
 
 // COMMENT

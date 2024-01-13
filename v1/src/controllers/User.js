@@ -6,21 +6,22 @@ import { generateAccessToken, generateRefreshToken, passwordToHash } from "../sc
 import eventEmitter from "../scripts/events/eventEmitter.js";
 import UserService from "../services/UserService.js";
 import ProjectService from "../services/ProjectService.js";
+import ApiError from "../errors/ApiError.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class User {
-  index(req, res) {
+  index(req, res, next) {
     UserService.list(req.body)
       .then((response) => {
         res.status(httpStatus.OK).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  create(req, res) {
+  create(req, res, next) {
     req.body.password = passwordToHash(req.body.password);
 
     UserService.create(req.body)
@@ -28,58 +29,58 @@ class User {
         res.status(httpStatus.CREATED).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  update(req, res) {
+  update(req, res, next) {
     UserService.update(req.user?._id, req.body)
       .then((response) => {
+        if (!response) {
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
+        }
         res.status(httpStatus.CREATED).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  deleteUser(req, res) {
-    if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
-    }
-
+  deleteUser(req, res, next) {
     UserService.delete(req.params.id)
       .then((response) => {
         if (!response) {
-          return res.status(httpStatus.NOT_FOUND).send({
-            message: "Böyle bir kayıt bulunmamaktadır.",
-          });
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
         res.status(httpStatus.OK).send({
           message: "Kayıt silinmiştir.",
         });
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  projectList(req, res) {
+  projectList(req, res, next) {
     ProjectService.list({ user_id: req.user?._id })
       .then((response) => {
         res.status(httpStatus.OK).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  login(req, res) {
+  login(req, res, next) {
     req.body.password = passwordToHash(req.body.password);
 
     UserService.findOne(req.body)
       .then((user) => {
-        if (!user) {
-          return res.status(httpStatus.NOT_FOUND).send({ message: "Böyle bir kullanıcı bulunmamaktadır." });
+        if (!response) {
+          next(new ApiError("Böyle bir kullanıcı bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
         user = {
           ...user.toObject(),
@@ -92,16 +93,17 @@ class User {
         res.status(httpStatus.OK).send(user);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  resetPassword(req, res) {
+  resetPassword(req, res, next) {
     const new_password = uuid.v4()?.split("-")[0] || `usr-${new Date().getTime()}`;
     UserService.updateWhere({ email: req.body.email }, { password: passwordToHash(new_password) })
       .then((user) => {
         if (!user) {
-          return res.status(httpStatus.NOT_FOUND).send({ message: "Böyle bir kullanıcı bulunmamaktadır." });
+          next(new ApiError("Böyle bir kullanıcı bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
         eventEmitter.emit("send_email", {
           to: user.email,
@@ -112,24 +114,25 @@ class User {
         res.status(httpStatus.OK).send({ message: "Şifre sıfırlama işlemi için sisteme kayıtlı e-posta adresinize gereken bilgileri gönderdik." });
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  changePassword(req, res) {
+  changePassword(req, res, next) {
     req.body.password = passwordToHash(req.body.password);
     UserService.update(req.user?._id, req.body)
       .then((response) => {
         res.status(httpStatus.CREATED).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  updateProfileImage(req, res) {
+  updateProfileImage(req, res, next) {
     if (!req?.files?.profile_image) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "Bu işlemi yapabilmek için dosya yüklenmesi gerekmektedir." });
+      next(new ApiError("Bu işlemi yapabilmek için dosya yüklenmesi gerekmektedir.", httpStatus.BAD_REQUEST));
+      return;
     }
 
     const extension = path.extname(req.files.profile_image.name);
@@ -138,7 +141,8 @@ class User {
 
     req.files.profile_image.mv(folderPath, (error) => {
       if (error) {
-        return res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error);
+        next(new ApiError(error, httpStatus.INTERNAL_SERVER_ERROR));
+        return;
       }
 
       UserService.update(req.user?._id, { profile_image: fileName })
@@ -146,7 +150,7 @@ class User {
           res.status(httpStatus.CREATED).send(response);
         })
         .catch((err) => {
-          res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+          next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
         });
     });
   }

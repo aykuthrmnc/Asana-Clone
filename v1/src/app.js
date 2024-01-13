@@ -7,6 +7,7 @@ import loaders from "./loaders/index.js";
 import events from "./scripts/events/index.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { errorHandler } from "./middlewares/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,4 +27,11 @@ app.listen(process.env.APP_PORT, () => {
   app.use("/users", UserRoutes);
   app.use("/sections", SectionRoutes);
   app.use("/tasks", TaskRoutes);
+
+  app.use((req, res) => {
+    res.status(404).json({ message: "Aradığınız sayfa bulunmamaktadır." });
+  });
+
+  //! ERROR HANDLER
+  app.use(errorHandler);
 });

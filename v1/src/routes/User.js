@@ -1,6 +1,6 @@
 import { Router } from "express";
 import UserController from "../controllers/User.js";
-import { changePasswordValidation, createValidation, loginValidation, resetPasswordValidation, updateValidation } from "../validations/Users.js";
+import { changePasswordValidation, createValidation, loginValidation, resetPasswordValidation, updateValidation } from "../validations/User.js";
 import { authenticate, validate } from "../middlewares/index.js";
 
 const router = Router();

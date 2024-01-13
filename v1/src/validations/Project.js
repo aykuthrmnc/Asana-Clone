@@ -5,5 +5,6 @@ export const createValidation = Joi.object({
 });
 
 export const updateValidation = Joi.object({
+  id: Joi.string().required(),
   name: Joi.string().required().min(5),
 });

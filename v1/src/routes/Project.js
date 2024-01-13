@@ -1,6 +1,6 @@
 import { Router } from "express";
 import ProjectController from "../controllers/Project.js";
-import { createValidation, updateValidation } from "../validations/Projects.js";
+import { createValidation, updateValidation } from "../validations/Project.js";
 import { authenticate, validate } from "../middlewares/index.js";
 
 const router = Router();

@@ -1,10 +1,12 @@
 import httpStatus from "http-status";
 import TaskService from "../services/TaskService.js";
+import ApiError from "../errors/ApiError.js";
 
 class Task {
-  index(req, res) {
+  index(req, res, next) {
     // if (!req.params.section_id) {
-    //   return res.status(httpStatus.BAD_REQUEST).send({ message: "Proje bilgisi eksiktir." });
+    //   next(new ApiError("Proje bilgisi eksiktir.", httpStatus.BAD_REQUEST));
+    //   return;
     // }
 
     TaskService.list() // { section_id: req.params.section_id }
@@ -12,11 +14,11 @@ class Task {
         res.status(httpStatus.OK).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  create(req, res) {
+  create(req, res, next) {
     req.body.user_id = req.user; // req.user._id;
 
     TaskService.create(req.body)
@@ -24,52 +26,40 @@ class Task {
         res.status(httpStatus.CREATED).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  update(req, res) {
-    if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
-    }
-
+  update(req, res, next) {
     TaskService.update(req.params.id, req.body)
       .then((response) => {
         res.status(httpStatus.OK).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  deleteTask(req, res) {
-    if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
-    }
-
+  deleteTask(req, res, next) {
     TaskService.delete(req.params.id)
       .then((response) => {
         if (!response) {
-          return res.status(httpStatus.NOT_FOUND).send({
-            message: "Böyle bir kayıt bulunmamaktadır.",
-          });
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
         res.status(httpStatus.OK).send(response);
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  makeComment(req, res) {
-    if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
-    }
-
+  makeComment(req, res, next) {
     TaskService.findOne({ _id: req.params.id })
       .then((task) => {
         if (!task) {
-          return res.status(httpStatus.NOT_FOUND).send({ message: "Böyle bir kayıt bulunmamaktadır." });
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
 
         const comment = {
@@ -86,23 +76,25 @@ class Task {
             return res.status(httpStatus.OK).send(response);
           })
           .catch((err) => {
-            res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+            next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
           });
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  deleteComment(req, res) {
+  deleteComment(req, res, next) {
     if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
+      next(new ApiError("ID bilgisi eksiktir.", httpStatus.BAD_REQUEST));
+      return;
     }
 
     TaskService.findOne({ _id: req.params.id })
       .then((task) => {
         if (!task) {
-          return res.status(httpStatus.NOT_FOUND).send({ message: "Böyle bir kayıt bulunmamaktadır." });
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
 
         task.comments = task.comments.filter((c) => c._id != req.params.commentId);
@@ -113,23 +105,20 @@ class Task {
             return res.status(httpStatus.OK).send(response);
           })
           .catch((err) => {
-            res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+            next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
           });
       })
       .catch((err) => {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err);
+        next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR));
       });
   }
 
-  addSubTask(req, res) {
-    if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
-    }
-
+  addSubTask(req, res, next) {
     TaskService.findOne({ _id: req.params.id })
       .then((task) => {
         if (!task) {
-          return res.status(httpStatus.NOT_FOUND).send({ message: "Böyle bir kayıt bulunmamaktadır." });
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
 
         //! SUBTASK CREATE
@@ -142,26 +131,23 @@ class Task {
               .then((response) => {
                 return res.status(httpStatus.OK).send(response);
               })
-              .catch((err) => res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err));
+              .catch((err) => next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR)));
           })
-          .catch((err) => res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err));
+          .catch((err) => next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR)));
       })
-      .catch((err) => res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err));
+      .catch((err) => next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR)));
   }
 
-  getTask(req, res) {
-    if (!req.params.id) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "ID bilgisi eksiktir." });
-    }
-
+  getTask(req, res, next) {
     TaskService.findOne({ _id: req.params.id }, true)
       .then((task) => {
         if (!task) {
-          return res.status(httpStatus.NOT_FOUND).send({ message: "Böyle bir kayıt bulunmamaktadır." });
+          next(new ApiError("Böyle bir kayıt bulunmamaktadır.", httpStatus.NOT_FOUND));
+          return;
         }
         res.status(httpStatus.OK).send(task);
       })
-      .catch((err) => res.status(httpStatus.INTERNAL_SERVER_ERROR).send(err));
+      .catch((err) => next(new ApiError(err?.message, httpStatus.INTERNAL_SERVER_ERROR)));
   }
 }
 
